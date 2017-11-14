@@ -1,0 +1,11 @@
+[development]
+address = "localhost"
+port = 8000
+log = "normal"
+
+[production]
+address = "localhost"
+port = 8000
+log = "critical"
+secret_key = "TVhM2zvWGNSe7cE3EyCXB1/BUBz5m1baAz/mywefj/Y="
+workers = 8
