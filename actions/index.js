@@ -15,8 +15,6 @@ async function dispatch(type, cxt) {
     }), {})
   }), {}))
 
-  console.log(modifiedCxt)
-
   try {
     result = await actions[type].fn(modifiedCxt)
   } catch(e) {

@@ -8,56 +8,67 @@ const toModel = (x) => x ? transformKeys(x) : x
 
 async function sinceSequence({db, scopeId, sequenceId, models, page}) {
   const scope = toModel(await db('scopes').where({id: scopeId}).first())
-  const limit = 100
+  const limit = 500
   const offset = (page - 1) * limit
-  const patch = {}
+  let patch = undefined
   let hasNext = false
   
-  const validModels = Object.keys(models)
-    .filter(key=>models[key].keys.sequenceId && models[key].keys.id && !models[key].private)
+  if (sequenceId){
+    patch = {}
 
-  const nameMap = {}
-  validModels.forEach(key=>{
-    const name = camelize(models[key].tableName, true)
-    nameMap[models[key].tableName] = name
-    patch[name] = {}
-  })
+    const validModels = Object.keys(models)
+      .filter(key=>models[key].keys.sequenceId && models[key].keys.id && !models[key].private)
 
-  await Promise.all(validModels.map(async name=>{
-    const model = models[name]
-    const mappedName = nameMap[models[name].tableName]
+    const nameMap = {}
+    validModels.forEach(key=>{
+      const name = camelize(models[key].tableName, true)
+      nameMap[models[key].tableName] = name
+      patch[name] = {}
+    })
+    
+    await Promise.all(validModels.map(async name=>{
+      const model = models[name]
+      const mappedName = nameMap[models[name].tableName]
 
-    const countResult = (await db(models[name].tableName)
-      .innerJoin('scope_sequences', `${models[name].tableName}.sequence_id`, `scope_sequences.id`)
-      .where('scope_id', scopeId)
-      .whereBetween('sequence_id', [sequenceId, scope.currentSequenceId])
-      .count())
-
-    const count = countResult[0].count
-
-    if (count - page * limit > limit)
-      hasNext = true
-
-    const results = toModel(
-      await db(models[name].tableName)
+      const countResult = (await db(models[name].tableName)
         .innerJoin('scope_sequences', `${models[name].tableName}.sequence_id`, `scope_sequences.id`)
         .where('scope_id', scopeId)
-        .whereBetween('sequence_id', [sequenceId, scope.currentSequenceId])
-        .offset(offset)
-        .limit(limit)
-    )
+        .andWhereNot('sequence_id', sequenceId)
+        .andWhereBetween('sequence_id', [sequenceId, scope.currentSequenceId])
+        .count())
 
-    results.map(toModel).forEach(result=>{
-      patch[mappedName][result.id] = Object.keys(model.keys)
-        .map(key=>({key, item: model.keys[key](result[key])}))
-        .reduce((obj, {key, item})=>Object.assign(obj, {[key]: item}), {})
-    })
-  }))
+      const count = countResult[0].count
+
+      if (count - (page - 1) * limit > limit) {
+        hasNext = true
+      }
+
+      const results = toModel(
+        await db(models[name].tableName)
+          .innerJoin('scope_sequences', `${models[name].tableName}.sequence_id`, `scope_sequences.id`)
+          .where('scope_id', scopeId)
+          .andWhereNot('sequence_id', sequenceId)
+          .andWhereBetween('sequence_id', [sequenceId, scope.currentSequenceId])
+          .offset(offset)
+          .limit(limit)
+      )
+
+      results.map(toModel).forEach(result=>{
+        patch[mappedName][result.id] = Object.keys(model.keys)
+          .map(key=>({key, item: model.keys[key](result[key])}))
+          .reduce((obj, {key, item})=>Object.assign(obj, {[key]: item}), {})
+      })
+    }))
+  }
 
   return {
     seq: scope.currentSequenceId,
     patch,
-    next: hasNext ? `${process.env.PUBLIC_URL}/${scopeId}/${sequenceId}?page=${page + 1}` : null
+    next: !patch
+      ? undefined
+      : hasNext
+        ? `${process.env.PUBLIC_URL}/${scopeId}/${sequenceId}?page=${page + 1}`
+        : null
   }
 }
 

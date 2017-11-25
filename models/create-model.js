@@ -9,11 +9,11 @@ const create = ({self, tableName, keys})=>({db, sequence})=>async (values)=>{
 }
 
 const get = ({tableName, keys})=>({db, sequence})=>async (id)=>{
-
+  return self.parse(await db(tableName).where({id}).first())
 }
 
 const update = ({tableName, keys})=>({db, sequence})=>()=>{
-
+  
 }
 
 const destroy = ({tableName, keys})=>({db, sequence})=>()=>{
