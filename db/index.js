@@ -1,10 +1,12 @@
 const {camelize} = require('inflection')
 const transformKeys = require('transformkeys')
 const jwt = require('jsonwebtoken')
+const keyCast = require('../models/key-cast')
 
-module.exports = { sinceSequence, getRole, getUser, newSequence, getCurrentUser}
+module.exports = { sinceSequence, getRole, getUser, newSequence, getCurrentUser, getScopes}
 
 const toModel = (x) => x ? transformKeys(x) : x
+const flatten = (arr) => arr.reduce((flat, arr) => flat.concat(Array.isArray(arr) ? flatten(arr) : arr), [])
 
 async function sinceSequence({db, scopeId, sequenceId, models, page}) {
   const scope = toModel(await db('scopes').where({id: scopeId}).first())
@@ -55,7 +57,7 @@ async function sinceSequence({db, scopeId, sequenceId, models, page}) {
 
       results.map(toModel).forEach(result=>{
         patch[mappedName][result.id] = Object.keys(model.keys)
-          .map(key=>({key, item: model.keys[key](result[key])}))
+          .map(key => ({ key, item: keyCast(model.keys[key])(result[key])}))
           .reduce((obj, {key, item})=>Object.assign(obj, {[key]: item}), {})
       })
     }))
@@ -78,7 +80,16 @@ async function getRole({db, scopeId, userId}) {
     'user_id': userId
   }).first()
 
-  return permission ? permission.role : null
+  if (permission)
+    return permission.role
+
+  const scope = toModel(await db('scopes').where({
+    'id': scopeId
+  }).first())
+
+  return scope.parentScopeId === null
+    ? null
+    : await getRole({ db, scopeId: scope.parentScopeId, userId })
 }
 
 async function getUser({db, userId}) {
@@ -114,4 +125,35 @@ function getCurrentUser({db, req}) {
       getUser({db, userId: decoded.id}).then(resolve).catch(reject)
     })
   })
+}
+
+async function getScopes({db, user}) {
+  const permissions = await db('scope_permissions').where({
+    'user_id': user.id
+  })
+
+  const scopes = flatten(await Promise.all(permissions.map(toModel).map(async ({scopeId, role})=>{
+    const scope = toModel(await db('scopes').where({ id: scopeId }).first())
+    const children = await getChildScopes({db, scope, user, role})
+    return [{id: scopeId, role, seq: scope.currentSequenceId, isPrimary: true}, ...children]
+  }))).reduce((obj, { id, role, seq, isPrimary }) => {
+    if (!obj[id] || isPrimary)
+      Object.assign(obj, { [id]: { id, role, seq } })
+    return obj
+  }, {})
+
+  return scopes
+}
+
+async function getChildScopes({db, scope, role, user}) {
+  const childScopes = (await db('scopes').where({ parent_scope_id: scope.id })).map(toModel)
+
+  const defs = await Promise.all(childScopes.map(async (scope)=>{
+    const { id, seq } = scope
+
+    const children = await getChildScopes({ db, scope, role, user })
+    return [{ id, role, seq: scope.currentSequenceId }, ...children]
+  }))
+
+  return defs
 }

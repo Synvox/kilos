@@ -1,6 +1,6 @@
 const transformKeys = require('transformkeys')
 const { tableize, underscore, camelize } = require('inflection')
-
+const keyCast = require('./key-cast')
 
 const create = ({self, tableName, keys})=>({db, sequence})=>async (values)=>{
   const casedValues = transformKeys(self.parse(values), 'snake')
@@ -20,13 +20,18 @@ const destroy = ({tableName, keys})=>({db, sequence})=>()=>{
 
 }
 
+const base = (self)=>{
+  const obj = {}
+  return obj
+}
+
 const parse = ({keys, self})=>(values)=>{
   if (Array.isArray(values)) return values.map(self.parse)
   values = transformKeys(values)
 
   return Object.keys(keys).reduce((obj, key) => Object.assign(obj, {
-    [key]: values[key] != null ? keys[key](values[key]) : values[key]
-  }), {})
+    [key]: values[key] != null ? keyCast(keys[key])(values[key]) : values[key]
+  }), {...base(self)})
 }
 
 module.exports = ({

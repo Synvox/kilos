@@ -19,9 +19,12 @@ function model(name, keys, private=false) {
 }
 
 function serializeModel(model) {
-  return Object.keys(model.keys).reduce((obj, key)=>Object.assign(obj, {
-    [key]: serializeKey(model.keys[key])
-  }), {})
+  return {
+    name: model.name,
+    properties: Object.keys(model.keys).reduce((obj, key) => Object.assign(obj, {
+      [key]: serializeKey(model.keys[key])
+    }), {})
+  }
 }
 
 function serializeSchema(schema) {
@@ -38,11 +41,11 @@ function serializeKey(key) {
     })
   }
 
-  if (key === Boolean) return {type: 'boolean'}
-  if (key === Number) return {type: 'number'}
-  if (key === String) return {type: 'string'}
+  if (key === Boolean) return { type: 'boolean' }
+  if (key === Number) return { type: 'number' }
+  if (key === String) return { type: 'string' }
   // @TODO add more types
-  return {type: 'any'}
+  return { type: 'any' }
 }
 
 async function verifyModels(db) {

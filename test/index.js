@@ -2,20 +2,21 @@ const {model, action, server} = require('../index.js')
 
 model('Comment', {
   id: Number,
-  body: String,
-  userId: Number,
-  sequenceId: Number
-})
-
-model('Article', {
-  id: Number,
-  body: String,
+  body: {
+    type: String,
+    regex: /.+/,
+    error: 'Your post needs more characters'
+  },
   userId: Number,
   sequenceId: Number
 })
 
 action('CREATE_COMMENT', {
-  body: String
+  body: {
+    type: String,
+    regex: /.+/,
+    error: 'Your post needs more characters'
+  },
 }, async ({db, user, sequence, role, payload, Comment})=>{
   if (!user) throw new Error('Not authenticated')
   if (!role) throw new Error('Not within scope')
