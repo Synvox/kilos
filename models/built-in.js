@@ -13,7 +13,8 @@ module.exports = (defineModel) => {
     .attrs({
       name: 'string',
       currentSequenceId: 'id',
-      parentScopeId: 'id'
+      parentScopeId: 'id',
+      version: 'long'
     }, true)
     .build()
 
@@ -22,7 +23,7 @@ module.exports = (defineModel) => {
     .attrs({
       userId: 'id',
       scopeId: 'id',
-      previousSequenceId: 'id'
+      version: 'long'
     }, true)
     .build()
 

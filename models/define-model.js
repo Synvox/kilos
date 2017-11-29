@@ -1,7 +1,6 @@
 const cache = require('./cache')
 const { Sequelize, sequelize } = require('./sequelize')
 const defineEdge = require('../edges/define-edge')
-const {ID} = require('./id')
 
 function defineModel(name) {
   return new ModelBuilder(name)
@@ -40,7 +39,7 @@ class ModelBuilder {
 
 const typemap = {
   'string': Sequelize['STRING'],
-  'id': ID,
+  'id': Sequelize['UUID'],
   'int': Sequelize['INTEGER'],
   'float': Sequelize['FLOAT'],
   'long': Sequelize['BIGINT'],
@@ -79,14 +78,14 @@ function getDef(props, strict) {
   if (!strict) {
     Object.assign(obj, {
       id: {
-        type: Sequelize.BIGINT,
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
-        autoIncrement: true,
         field: 'id'
       },
       sequenceId: {
         field: 'sequence_id',
-        type: Sequelize.BIGINT
+        type: Sequelize.Sequelize.UUID
       }
     })
   }

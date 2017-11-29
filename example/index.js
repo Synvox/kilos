@@ -19,9 +19,11 @@ module.exports = kilos.createServer(
   kilos.action('createComment')
     .input({ body: 'string' })
     .output('Comment')
-    .resolver(async ({ body }, { Comment, sequence, user, role, transaction }) => {
-      if (!user) throw new Error('No User')
-      if (!role) throw new Error('No Role')
+    .resolver(async ({ body }, { Comment, sequence, user, role, transaction, ActionError }) => {
+      if (!user) throw new ActionError('No User')
+      if (!role) throw new ActionError('No Role')
+
+      // throw new ActionError('test')
 
       const comment = await sequence.createComment({
         body,

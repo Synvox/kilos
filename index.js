@@ -5,7 +5,6 @@ const {getUser, getJWT} = require('./models/auth')
 const getScopes = require('./models/get-scopes')
 const getSince = require('./models/get-since')
 const getRole = require('./models/get-role')
-const {decode} = require('./models/id')
 const dispatch = require('./actions/dispatch')
 const { router, get, post } = require('microrouter')
 const { send, createError, json } = require('micro')
@@ -44,12 +43,10 @@ const app = router(
     return {jwt}
   }),
 
-  get('/:scopeId/:sequenceId', async req => {
+  get('/:scopeId/:version', async req => {
     const { Scope } = models
 
-    let { scopeId, sequenceId } = req.params
-    scopeId = decode(scopeId)
-    sequenceId = decode(sequenceId)
+    const { scopeId, version } = req.params
 
     const user = await getUser({ req })
     if (!user) throw createError(401, '')
@@ -60,7 +57,7 @@ const app = router(
     const role = await getRole({ user, scope })
     if (!user) throw createError(401, '')
 
-    const { seq, patch } = await getSince({ user, scope, sequenceId })
+    const { seq, patch } = await getSince({ user, scope, version })
 
     return {
       seq,
@@ -68,12 +65,10 @@ const app = router(
     }
   }),
 
-  post('/:scopeId/:sequenceId', async req => {
+  post('/:scopeId/:version', async req => {
     const { Scope } = models
 
-    let { scopeId, sequenceId } = req.params
-    scopeId = decode(scopeId)
-    sequenceId = decode(sequenceId)
+    const { scopeId, version } = req.params
     const body = await json(req)
 
     const user = await getUser({ req })
@@ -90,7 +85,7 @@ const app = router(
       results.push(await dispatch(action.type, action.payload, { user, role, scope }))
     }
 
-    const { seq, patch } = await getSince({ user, scope, sequenceId })
+    const { seq, patch } = await getSince({ user, scope, version })
 
     return {
       seq,

@@ -2,8 +2,18 @@ const { Op } = require('sequelize')
 const models = require('./')
 const getRole = require('./get-role')
 
-async function getSince({ user, scope, sequenceId }) {
+async function getSince({ user, scope, version }) {
   const { Scope, ScopePermission, ScopeSequence, User, ...userDefined } = models
+
+  const sequences = await ScopeSequence.findAll({where: {
+    scopeId: scope.id,
+    version: {[Op.and]: {
+      [Op.ne]: version,
+      [Op.between]: [Number(version), Number(scope.version)]
+    }}
+  }})
+
+  const sequenceIds = sequences.map(x=>x.id)
 
   const results = (await Promise.all(
     Object.keys(userDefined)
@@ -13,10 +23,7 @@ async function getSince({ user, scope, sequenceId }) {
         item: (await model.findAll({
           where: {
             sequenceId: {
-              [Op.and]: {
-                [Op.ne]: sequenceId,
-                [Op.between]: [Number(sequenceId), Number(scope.currentSequenceId)]
-              }
+              [Op.in]: sequenceIds
             }
           }
         }))
@@ -25,7 +32,7 @@ async function getSince({ user, scope, sequenceId }) {
   )).reduce((obj, { key, item }) => Object.assign(obj, { [key]: item }), {})
 
   return {
-    seq: scope.currentSequenceId,
+    seq: scope.version,
     patch: results
   }
 }

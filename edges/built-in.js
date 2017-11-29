@@ -18,9 +18,4 @@ module.exports = (defineEdge) => setImmediate(() => {
     .toMany('ScopeSequence', 'scope')
     .usingKey('scopeId')
     .build()
-
-  defineEdge('ScopeSequence', 'nextSequence')
-    .toOne('ScopeSequence', 'previousSequence')
-    .usingKey('previousSequenceId')
-    .build()
 })
