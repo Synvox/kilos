@@ -2,15 +2,20 @@ module.exports = (defineModel) => {
   defineModel('User')
     .tableName('users')
     .attrs({
+      id: { type: 'id', primaryKey: true },
       username: 'string',
       email: 'string',
-      password: 'string'
+      password: {
+        type: 'string',
+        private: true
+      }
     }, true)
     .build()
 
   defineModel('Scope')
     .tableName('scopes')
     .attrs({
+      id: { type: 'id', primaryKey: true },
       name: 'string',
       currentSequenceId: 'id',
       parentScopeId: 'id',
@@ -21,6 +26,7 @@ module.exports = (defineModel) => {
   defineModel('ScopeSequence')
     .tableName('scope_sequences')
     .attrs({
+      id: { type: 'id', primaryKey: true },
       userId: 'id',
       scopeId: 'id',
       version: 'long'

@@ -1,6 +1,7 @@
 const cache = require('./cache')
 const { Sequelize, sequelize } = require('./sequelize')
 const defineEdge = require('../edges/define-edge')
+const { createType} = require('../graph')
 
 function defineModel(name) {
   return new ModelBuilder(name)
@@ -16,12 +17,21 @@ class ModelBuilder {
     return this
   }
   attrs(attrs, strict=false) {
+    this.rawAttrs = attrs
     this.attrs = getDef(attrs, strict)
     this.strict = strict
     return this
   }
   build() {
     const model = sequelize.define(this.name, this.attrs, { tableName: this.tableName })
+
+    createType(this.name, this.tableName, {
+      ...this.rawAttrs,
+      ...this.strict ? {} : {
+        id: 'id',
+        sequenceId: 'id'
+      }
+    }, model)
 
     if (!this.strict) {
       setImmediate(()=>{

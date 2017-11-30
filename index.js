@@ -4,6 +4,7 @@ const boxen = require('boxen')
 const chalk = require('chalk')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
+const graphqlHTTP = require('express-graphql')
 
 const models = require('./models')
 const {getUser, getJWT} = require('./models/auth')
@@ -12,6 +13,7 @@ const getSince = require('./models/get-since')
 const getRole = require('./models/get-role')
 const dispatch = require('./actions/dispatch')
 const {subscribe} = require('./redis')
+const {compile} = require('./graph')
 
 const app = express()
 
@@ -27,6 +29,14 @@ app.use(cors())
 app.use((req, res, next)=>{
   res.setHeader('X-Powered-By', 'Synvox')
   next()
+})
+
+app.use('/graphql', (req, res, next)=>{
+
+  graphqlHTTP({
+    schema: compile(),
+    graphiql: process.env.NODE_ENV !== 'production'
+  })(req, res, next)
 })
 
 if (app.get('env') === 'development') {
@@ -77,7 +87,9 @@ if (app.get('env') === 'development') {
       if (res.statusCode >= 400) color = 'yellow'
       if (res.statusCode >= 500) color = 'red'
       
-      console.log(chalk[color](`\n◄ (#${reqNum}) ${chalk.bold(res.statusCode)} [+${endMs - startMs}ms]\n`))
+      console.log(chalk[color](
+        `\n◄ (#${reqNum}) ${chalk.bold(res.statusCode)} [+${endMs - startMs}ms]\n`
+      ))
 
       try {
         const str = JSON.parse(chunk)

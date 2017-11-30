@@ -1,8 +1,11 @@
 const { get: getModel } = require('../models/cache')
+const { reopenType } = require('../graph')
 
 function defineEdge(...args) {
   return new EdgeBuilder(...args)
 }
+
+const lowercaseFirst = x=>x[0].toLowerCase() + x.substring(1)
 
 class EdgeBuilder {
   constructor(localModelName, localKey) {
@@ -49,6 +52,32 @@ class EdgeBuilder {
           foreignKey: remoteModel.rawAttributes[this.key].fieldName,
           sourceKey: remoteModel.rawAttributes[this.key].fieldName
         })
+
+        reopenType(this.localModelName, {
+          [this.remoteKey]: {
+            type: remoteModel.name,
+            plural: true,
+            resolve: (obj)=>{
+              return remoteModel.findAll({where: {
+                [remoteModel.rawAttributes[this.key].fieldName]: obj.id
+              }})
+            }
+          }
+        })
+
+        reopenType(this.remoteModelName, {
+          [lowercaseFirst(this.localModelName)]: {
+            type: this.localModelName,
+            plural: false,
+            resolve: (obj)=>{
+              return localModel.find({
+                where: {
+                  id: obj[remoteModel.rawAttributes[this.key].fieldName]
+                }
+              })
+            }
+          }
+        })
       },
       toOne: () => {
         localModel.hasOne(remoteModel, {
@@ -62,6 +91,34 @@ class EdgeBuilder {
           constraints: false,
           foreignKey: remoteModel.rawAttributes[this.key].fieldName,
           sourceKey: remoteModel.rawAttributes[this.key].fieldName
+        })
+
+        reopenType(this.localModelName, {
+          [this.remoteKey]: {
+            type: remoteModel.name,
+            plural: false,
+            resolve: (obj) => {
+              return remoteModel.find({
+                where: {
+                  [remoteModel.rawAttributes[this.key].fieldName]: obj.id
+                }
+              })
+            }
+          }
+        })
+
+        reopenType(this.remoteModelName, {
+          [lowercaseFirst(this.localModelName)]: {
+            type: this.localModelName,
+            plural: false,
+            resolve: (obj) => {
+              return localModel.find({
+                where: {
+                  id: obj[remoteModel.rawAttributes[this.key].fieldName]
+                }
+              })
+            }
+          }
         })
       }
     }[this.type]()
