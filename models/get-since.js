@@ -20,7 +20,7 @@ async function getSince({ user, scope, version }) {
       .map(modelName => userDefined[modelName])
       .map(async (model) => ({
         key: model.tableName,
-        item: (await model.findAll({
+        item: sequenceIds.length === 0 ? {} : (await model.findAll({
           where: {
             sequenceId: {
               [Op.in]: sequenceIds

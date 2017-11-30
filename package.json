@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "micro example/index.js",
-    "dev": "micro-dev example/index.js",
+    "start": "node example/index.js",
+    "dev": "nodemon example/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,14 +13,22 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^1.0.3",
+    "boxen": "^1.2.2",
+    "chalk": "^2.3.0",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.4",
     "dotenv": "^4.0.0",
-    "hashids": "^1.1.4",
+    "express": "^4.16.2",
+    "helmet": "^3.9.0",
+    "jsome": "^2.3.26",
     "jsonwebtoken": "^8.1.0",
     "knex": "^0.14.2",
-    "micro": "^9.0.2",
-    "micro-dev": "^1.4.0",
-    "microrouter": "^3.0.0",
+    "morgan": "^1.9.0",
+    "ms": "^2.0.0",
+    "node-redis-pubsub": "^1.0.3",
     "pg": "^7.4.0",
-    "sequelize": "^4.23.1"
+    "pretty-error": "^2.1.1",
+    "sequelize": "^4.23.1",
+    "sql-formatter": "^2.1.0"
   }
 }

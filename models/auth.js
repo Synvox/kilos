@@ -18,10 +18,15 @@ const sign = obj => new Promise((resolve, reject) => {
 
 async function getUser({ req }) {
   const { User } = models
-  if (!req.headers['authorization'])
+  let token = req.headers['authorization'] || req.cookies['authorization']
+
+  if (!token)
     return null
+  
   try {
-    const decoded = await verify(req.headers['authorization'].substring('Bearer '.length))
+    if (token.startsWith('Bearer'))
+      token = token.substring('Bearer '.length)
+    const decoded = await verify(token)
     const user = await User.find({ where: { id: decoded.id } })
     return user ? user : null
   } catch(e) {
