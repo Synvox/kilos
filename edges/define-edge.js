@@ -97,7 +97,7 @@ class EdgeBuilder {
           [this.remoteKey]: {
             type: remoteModel.name,
             plural: false,
-            resolve: (obj) => {
+            resolve: async (obj, args, cache) => {
               return remoteModel.find({
                 where: {
                   [remoteModel.rawAttributes[this.key].fieldName]: obj.id

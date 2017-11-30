@@ -1,8 +1,10 @@
+const Sequelize = require('sequelize')
+
 module.exports = (defineModel) => {
   defineModel('User')
     .tableName('users')
     .attrs({
-      id: { type: 'id', primaryKey: true },
+      id: { type: 'id', primaryKey: true, defaultValue: Sequelize.UUIDV4 },
       username: 'string',
       email: 'string',
       password: {
@@ -15,7 +17,7 @@ module.exports = (defineModel) => {
   defineModel('Scope')
     .tableName('scopes')
     .attrs({
-      id: { type: 'id', primaryKey: true },
+      id: { type: 'id', primaryKey: true, defaultValue: Sequelize.UUIDV4 },
       name: 'string',
       currentSequenceId: 'id',
       parentScopeId: 'id',
@@ -26,7 +28,7 @@ module.exports = (defineModel) => {
   defineModel('ScopeSequence')
     .tableName('scope_sequences')
     .attrs({
-      id: { type: 'id', primaryKey: true },
+      id: { type: 'id', primaryKey: true, defaultValue: Sequelize.UUIDV4},
       userId: 'id',
       scopeId: 'id',
       version: 'long'

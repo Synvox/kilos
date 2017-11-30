@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const graphql = require('graphql')
 const Kind = require('graphql/language')
 
@@ -22,18 +23,33 @@ function reopenType(name, attrs) {
 function compile() {
   Object.keys(types).forEach(key => compiledTypes[key] = compileType(types[key]))
 
+  const { Scope, ScopePermission, ScopeSequence, User, ...userDefined } = types
+
   const queryType = new graphql.GraphQLObjectType({
     name: 'Query',
     fields: () => {
-      const config = Object.keys(types)
+      const config = Object.keys(userDefined)
         .map(key => ({ key, item: types[key] }))
         .map(({ key, item }) => {
           return {
             key: item.tableName,
             item: {
               type: new graphql.GraphQLList(compiledTypes[key]),
-              resolve: () => {
-                return types[key].model.findAll()
+              resolve: async (_, args, context) => {
+                const results = await types[key].model.findAll({
+                  where: {
+                    '$sequence.scope_id$': { [Op.in]: Object.keys(context.scopes) }
+                  },
+                  include: {
+                    model: types['ScopeSequence'].model,
+                    as: 'sequence'
+                  }
+                })
+
+                context.cache[key] = context.cache[key] || {}
+                results.forEach(item => context.cache[key][item.id] = item)
+
+                return results
               }
             }
           }
@@ -51,6 +67,15 @@ function compile() {
 function compileType({ name, tableName, model, attrs }) {
   const Type = new graphql.GraphQLObjectType({
     name: name,
+    // args: Object
+    //   .keys(attrs)
+    //   .map(attrName => ({
+    //     key: attrName,
+    //     item: {
+    //       type: compileAttr(name, attrs[attrName]).type
+    //     }
+    //   }))
+    //   .reduce((obj, { key, item }) => Object.assign(obj, { [key]: item }), {}),
     fields: () => {
       return Object.keys(attrs)
         .map(key => ({ key, item: attrs[key] }))
@@ -128,6 +153,3 @@ function compileAttr(name, def) {
 }
 
 module.exports = { createType, reopenType, compile }
-
-// setTimeout(()=>{
-// }, 100)

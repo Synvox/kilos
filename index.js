@@ -31,14 +31,6 @@ app.use((req, res, next)=>{
   next()
 })
 
-app.use('/graphql', (req, res, next)=>{
-
-  graphqlHTTP({
-    schema: compile(),
-    graphiql: process.env.NODE_ENV !== 'production'
-  })(req, res, next)
-})
-
 if (app.get('env') === 'development') {
   const jsome = require('jsome')
   let reqCount = 0
@@ -91,12 +83,16 @@ if (app.get('env') === 'development') {
         `\n◄ (#${reqNum}) ${chalk.bold(res.statusCode)} [+${endMs - startMs}ms]\n`
       ))
 
-      try {
-        const str = JSON.parse(chunk)
-        jsome(str)
-      } catch (e) {
-        console.log(chunk)
-        console.log('\n')
+      if (chunk.length < 1000) {
+        try {
+          const str = JSON.parse(chunk)
+          jsome(str)
+        } catch (e) {
+          console.log(chunk)
+          console.log('\n')
+        }
+      } else  {
+        console.log(chalk.yellow(`Not showing output because it's too large`))
       }
 
       if (res.__error)
@@ -139,6 +135,24 @@ app.get('/', wrap(async (req, res) => {
     scopes: await getScopes({ user })
   })
 }))
+
+{
+  let schema = null
+  app.use('/graphql', wrap(async (req, res, next) => {
+    const user = await getUser({ req })
+    if (!user) throw createError(401)
+
+    const scopes = await getScopes({ user })
+
+    if (schema === null) schema = compile()
+
+    graphqlHTTP({
+      schema: schema,
+      graphiql: process.env.NODE_ENV !== 'production',
+      context: {user, scopes, cache:{}}
+    })(req, res, next)
+  }))
+}
 
 app.get('/stream', wrap(async (req, res) => {
   const user = await getUser({ req })
