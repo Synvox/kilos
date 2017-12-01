@@ -20,6 +20,9 @@ knex migrate:latest
 npm run dev
 ```
 
+## Example
+[See Here](https://github.com/Synvox/kilos/tree/master/example)
+
 ## Routes
 
 ### `POST /login`
