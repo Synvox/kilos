@@ -3,7 +3,7 @@ const models = require('./')
 const getRole = require('./get-role')
 
 async function getSince({ user, scope, version }) {
-  const { Scope, ScopePermission, ScopeSequence, User, ...userDefined } = models
+  const { Scope, ScopePermission, ScopeSequence, User, UserProvider, ...userDefined } = models
 
   const sequences = await ScopeSequence.findAll({where: {
     scopeId: scope.id,
@@ -32,7 +32,7 @@ async function getSince({ user, scope, version }) {
   )).reduce((obj, { key, item }) => Object.assign(obj, { [key]: item }), {})
 
   return {
-    seq: scope.version,
+    version: scope.version,
     patch: results
   }
 }

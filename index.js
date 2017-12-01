@@ -189,10 +189,10 @@ app.get('/:scopeId/:version', wrap(async (req, res) => {
   const role = await getRole({ user, scope })
   if (!user) throw createError(401, '')
 
-  const { seq, patch } = await getSince({ user, scope, version })
+  const { version: newVersion, patch } = await getSince({ user, scope, version })
 
   res.send({
-    seq,
+    version: newVersion,
     patch
   })
 }))
@@ -222,10 +222,10 @@ app.post('/:scopeId/:version', wrap(async (req, res) => {
     results.push(result)
   }
 
-  const { seq, patch } = await getSince({ user, scope, version })
+  const { version: newVersion, patch } = await getSince({ user, scope, version })
 
   res.send({
-    seq,
+    version: newVersion,
     results,
     patch
   })

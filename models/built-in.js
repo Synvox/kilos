@@ -6,10 +6,46 @@ module.exports = (defineModel) => {
     .attrs({
       id: { type: 'id', primaryKey: true, defaultValue: Sequelize.UUIDV4 },
       username: 'string',
+      firstName: {
+        field: 'first_name',
+        type: 'string'
+      },
+      lastName: {
+        field: 'last_name',
+        type: 'string'
+      },
       email: 'string',
-      password: {
-        type: 'string',
-        private: true
+      password: 'string'
+    }, true)
+    .build()
+
+  defineModel('UserProvider')
+    .tableName('user_providers')
+    .attrs({
+      id: {
+        type: 'id',
+        primaryKey: true,
+        defaultValue: Sequelize.UUIDV4
+      },
+      userId: {
+        field: 'user_id',
+        type: 'id'
+      },
+      origin: {
+        field: 'origin',
+        type: 'string'
+      },
+      foreignId: {
+        field: 'foreign_id',
+        type: 'string'
+      },
+      accessToken: {
+        field: 'access_token',
+        type: 'string'
+      },
+      refreshToken: {
+        field: 'refresh_token',
+        type: 'string'
       }
     }, true)
     .build()
@@ -28,7 +64,7 @@ module.exports = (defineModel) => {
   defineModel('ScopeSequence')
     .tableName('scope_sequences')
     .attrs({
-      id: { type: 'id', primaryKey: true, defaultValue: Sequelize.UUIDV4},
+      id: { type: 'id', primaryKey: true, defaultValue: Sequelize.UUIDV4 },
       userId: 'id',
       scopeId: 'id',
       version: 'long'

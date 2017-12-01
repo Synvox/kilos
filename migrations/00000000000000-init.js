@@ -3,7 +3,19 @@ exports.up = async function (knex, Promise) {
     table.uuid('id').defaultsTo(knex.raw('uuid_generate_v4()')).notNullable().primary()
     table.string('username').notNullable().unique()
     table.string('email').notNullable().unique()
-    table.string('password').notNullable()
+    table.string('first_name').notNullable()
+    table.string('last_name').notNullable()
+    table.string('password').nullable()
+    // "password":
+    // $2a$10$qYPecVG9i0N/067.89Jym.lG.7CXw415q39uxY8BHsxh9Rz6gW9V.
+  })
+  await knex.schema.createTable('user_providers', (table) => {
+    table.uuid('id').defaultsTo(knex.raw('uuid_generate_v4()')).notNullable().primary()
+    table.uuid('user_id').references('users.id').notNullable()
+    table.string('origin').notNullable()
+    table.string('foreign_id').notNullable()
+    table.string('access_token').notNullable()
+    table.string('refresh_token').notNullable()
   })
   await knex.schema.createTable('scopes', (table) => {
     table.uuid('id').defaultsTo(knex.raw('uuid_generate_v4()')).notNullable().primary()

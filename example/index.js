@@ -9,14 +9,13 @@ const kilos = require('../')
 
 const app = express()
 
-
-
 app.use('/', kilos(
   kilos.model('Comment')
     .tableName('comments')
     .attrs({
       body: 'string',
-      userId: 'id'
+      userId: 'id',
+      deleted: 'bool'
     }),
 
   kilos.edge('User', 'user')
@@ -51,7 +50,6 @@ app.use('/', kilos(
 ))
 
 app.listen(process.env.PORT, () => {
-
   console.log(boxen(`Started on port ${process.env.PORT}`, {
     padding: 2,
     borderColor: 'blue'

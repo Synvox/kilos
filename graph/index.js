@@ -23,7 +23,7 @@ function reopenType(name, attrs) {
 function compile() {
   Object.keys(types).forEach(key => compiledTypes[key] = compileType(types[key]))
 
-  const { Scope, ScopePermission, ScopeSequence, User, ...userDefined } = types
+  const { Scope, ScopePermission, ScopeSequence, User, UserProvider, ...userDefined } = types
 
   const queryType = new graphql.GraphQLObjectType({
     name: 'Query',
